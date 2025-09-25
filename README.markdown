@@ -25,7 +25,7 @@ Une plateforme de gestion de stockage et de partage de fichiers construite avec 
 ## 📸 Captures d’écran
 
 ### Page d’inscription
-![Capture d’écran - Page d’inscription](./docs/screenshots/signup.png)
+![Capture d’écran - Page d’inscription](./public/drive.PNG)
 
 ## Prérequis
 - Node.js 18 ou supérieur
