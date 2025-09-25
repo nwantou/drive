@@ -21,6 +21,12 @@ Une plateforme de gestion de stockage et de partage de fichiers construite avec 
 - **Options de tri** : Triez les fichiers par date, nom ou taille.
 - **Design responsive moderne** : Interface épurée et minimaliste sur tous les appareils.
 
+
+## 📸 Captures d’écran
+
+### Page d’inscription
+![Capture d’écran - Page d’inscription](./docs/screenshots/signup.png)
+
 ## Prérequis
 - Node.js 18 ou supérieur
 - npm
