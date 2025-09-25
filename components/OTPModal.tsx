@@ -2,13 +2,11 @@
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
   InputOTP,
@@ -55,7 +53,7 @@ const OTPModal = ({
   };
 
   const handleResendOtp = async () => {
-    await sendEmailOTP(email );
+    await sendEmailOTP(accountId, email);
   };
 
   return (

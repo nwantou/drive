@@ -24,46 +24,56 @@ const handleError = (error:unknown,message:string)=>{
 };
 
 
-export const sendEmailOTP = async (email: string) => {
-    const { account } = await createSessionClient();
-    
-    try{
-        const session = await account.createEmailToken(ID.unique(),email);
+export const sendEmailOTP = async (accountId: string, email: string) => {
+  const { account } = await createAdminClient(); // pas createSessionClient
 
-        return session.userId;
-    }catch (error){
-        handleError(error,"Impossible d 'envoyer un OTP");
-    }
-    };
-export const createAccount = async ({
-    fullName,
-    email,
-}: {
-    fullName: string;
-    email: string;
-}) => {
-    const existingUser = await getUserByEmail(email);
-
-    const accountId= await sendEmailOTP(email);
-    if (!accountId) throw new Error("Impssible d 'envoyer un OTP");
-
-    if (!existingUser){
-        const {databases} = await createAdminClient();
-
-        await databases.createDocument(
-            appwriteConfig.databaseId,
-            appwriteConfig.userscollectionId,
-            ID.unique(),
-            {
-                fullName,
-                email,
-                avatar:avatarPlaceholderUrl,
-                accountId,
-            }
-        )
-    }
-    return parseStringify({accountId});
+  try {
+    await account.createEmailToken(accountId, email);
+    return accountId;
+  } catch (error) {
+    handleError(error, "Impossible d'envoyer un OTP");
+  }
 };
+
+export const createAccount = async ({
+  fullName,
+  email,
+}: {
+  fullName: string;
+  email: string;
+}) => {
+  const existingUser = await getUserByEmail(email);
+
+  if (existingUser) {
+    // Renvoie juste son ID si déjà inscrit
+    await sendEmailOTP(existingUser.accountId, email);
+    return parseStringify({ accountId: existingUser.accountId });
+  }
+
+  const { account, databases } = await createAdminClient();
+
+  // 1. Créer un vrai utilisateur Appwrite
+  const newAccount = await account.create(ID.unique(), email, "password-temp");
+
+  // 2. Envoyer OTP
+  await sendEmailOTP(newAccount.$id, email);
+
+  // 3. Sauvegarder dans ta DB custom
+  await databases.createDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.userscollectionId,
+    ID.unique(),
+    {
+      fullName,
+      email,
+      avatar: avatarPlaceholderUrl,
+      accountId: newAccount.$id,
+    }
+  );
+
+  return parseStringify({ accountId: newAccount.$id });
+};
+
 
 export const verifySecret=async( {
     accountId,
@@ -126,14 +136,14 @@ export const signOutUser = async () => {
 export const signInUser = async ({ email }: { email: string }) => {
   try {
     const existingUser = await getUserByEmail(email);
- 
-    if (existingUser) {
-      await sendEmailOTP(email );
-      return parseStringify({ accountId: existingUser.accountId });
+
+    if (!existingUser) {
+      return parseStringify({ accountId: null, error: "Utilisateur inconnu" });
     }
 
-     return parseStringify({ accountId: null, error: "User not found" });
+    await sendEmailOTP(existingUser.accountId, email);
+    return parseStringify({ accountId: existingUser.accountId });
   } catch (error) {
-    handleError(error, "Failed to sign in user");
+    handleError(error, "Impossible de se connecter");
   }
 };
